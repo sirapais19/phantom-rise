@@ -73,19 +73,31 @@ export const tournaments = [
   },
 ];
 
-export const players = [
-  { id: 1, name: "Alex Rivera", number: 7, role: "Captain", position: "Handler", funFact: "Can throw 80m forehands", image: "" },
-  { id: 2, name: "Jordan Chen", number: 23, role: "Captain", position: "Cutter", funFact: "Former track athlete", image: "" },
-  { id: 3, name: "Sam Williams", number: 11, role: "Coach", position: "Head Coach", funFact: "10+ years playing experience", image: "" },
-  { id: 4, name: "Casey Morgan", number: 3, role: "Player", position: "Handler", funFact: "Ambidextrous thrower", image: "" },
-  { id: 5, name: "Taylor Kim", number: 15, role: "Player", position: "Cutter", funFact: "Highest vertical on team", image: "" },
+export interface Player {
+  id: number;
+  name: string;
+  number: number;
+  role: "Captain" | "Coach" | "Staff" | "Player";
+  position: string;
+  funFact: string;
+  image: string;
+  ultiscoreId?: string;
+  instagramUsername?: string;
+}
+
+export const players: Player[] = [
+  { id: 1, name: "Alex Rivera", number: 7, role: "Captain", position: "Handler", funFact: "Can throw 80m forehands", image: "", ultiscoreId: "10275", instagramUsername: "@alex_phantom7" },
+  { id: 2, name: "Jordan Chen", number: 23, role: "Captain", position: "Cutter", funFact: "Former track athlete", image: "", ultiscoreId: "10276", instagramUsername: "@jordanchen23" },
+  { id: 3, name: "Sam Williams", number: 11, role: "Coach", position: "Head Coach", funFact: "10+ years playing experience", image: "", ultiscoreId: "10277" },
+  { id: 4, name: "Casey Morgan", number: 3, role: "Player", position: "Handler", funFact: "Ambidextrous thrower", image: "", instagramUsername: "casey_morgan" },
+  { id: 5, name: "Taylor Kim", number: 15, role: "Player", position: "Cutter", funFact: "Highest vertical on team", image: "", ultiscoreId: "10278", instagramUsername: "@taylorkim15" },
   { id: 6, name: "Riley Santos", number: 88, role: "Player", position: "Handler", funFact: "Master of the hammer throw", image: "" },
-  { id: 7, name: "Morgan Lee", number: 42, role: "Player", position: "Cutter", funFact: "Never misses morning practice", image: "" },
-  { id: 8, name: "Jamie Foster", number: 9, role: "Player", position: "Hybrid", funFact: "Played in 3 countries", image: "" },
-  { id: 9, name: "Drew Parker", number: 17, role: "Player", position: "Cutter", funFact: "Known for layout Ds", image: "" },
-  { id: 10, name: "Avery Brooks", number: 21, role: "Player", position: "Handler", funFact: "Team DJ at tournaments", image: "" },
+  { id: 7, name: "Morgan Lee", number: 42, role: "Player", position: "Cutter", funFact: "Never misses morning practice", image: "", instagramUsername: "@morganlee42" },
+  { id: 8, name: "Jamie Foster", number: 9, role: "Player", position: "Hybrid", funFact: "Played in 3 countries", image: "", ultiscoreId: "10279" },
+  { id: 9, name: "Drew Parker", number: 17, role: "Player", position: "Cutter", funFact: "Known for layout Ds", image: "", ultiscoreId: "10280", instagramUsername: "@drew_parker17" },
+  { id: 10, name: "Avery Brooks", number: 21, role: "Player", position: "Handler", funFact: "Team DJ at tournaments", image: "", instagramUsername: "@averybrooks_dj" },
   { id: 11, name: "Quinn Hayes", number: 5, role: "Player", position: "Cutter", funFact: "Fastest player on the team", image: "" },
-  { id: 12, name: "Blake Thompson", number: 33, role: "Staff", position: "Assistant Coach", funFact: "Spirit captain 3 years running", image: "" },
+  { id: 12, name: "Blake Thompson", number: 33, role: "Staff", position: "Assistant Coach", funFact: "Spirit captain 3 years running", image: "", instagramUsername: "@blake_t33" },
 ];
 
 export const newsArticles = [

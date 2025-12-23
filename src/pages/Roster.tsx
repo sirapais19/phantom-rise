@@ -1,12 +1,117 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, BarChart3, Instagram } from "lucide-react";
 import PageLayout from "@/components/layout/PageLayout";
 import SectionHeading from "@/components/ui/SectionHeading";
 import GlassCard from "@/components/ui/GlassCard";
 import { Input } from "@/components/ui/input";
-import { players } from "@/data/teamData";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { players, Player } from "@/data/teamData";
 import defaultPlayer from "@/assets/default-player.png";
+
+const PlayerSocialButtons = ({ player }: { player: Player }) => {
+  const hasUltiscore = Boolean(player.ultiscoreId);
+  const hasInstagram = Boolean(player.instagramUsername);
+
+  const getInstagramUrl = (username: string) => {
+    const cleanUsername = username.startsWith("@") ? username.slice(1) : username;
+    return `https://instagram.com/${cleanUsername}`;
+  };
+
+  const getInstagramDisplay = (username: string) => {
+    return username.startsWith("@") ? username : `@${username}`;
+  };
+
+  if (!hasUltiscore && !hasInstagram) return null;
+
+  return (
+    <TooltipProvider>
+      <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border/30">
+        {/* UltiScore Button */}
+        {hasUltiscore ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-3 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary border border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)]"
+                onClick={() => window.open(`https://ultiscore.com/profile/${player.ultiscoreId}`, "_blank")}
+              >
+                <BarChart3 className="h-4 w-4 mr-1.5" />
+                <span className="text-xs font-medium">Stats</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>View UltiScore Profile</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-3 bg-muted/30 text-muted-foreground/50 border border-border/20 cursor-not-allowed"
+                disabled
+              >
+                <BarChart3 className="h-4 w-4 mr-1.5" />
+                <span className="text-xs font-medium">Stats</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Stats not available</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {/* Instagram Button */}
+        {hasInstagram ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-3 bg-accent/10 hover:bg-accent/20 text-accent hover:text-accent border border-accent/20 hover:border-accent/40 transition-all duration-300 hover:shadow-[0_0_12px_hsl(var(--accent)/0.3)]"
+                onClick={() => window.open(getInstagramUrl(player.instagramUsername!), "_blank")}
+              >
+                <Instagram className="h-4 w-4 mr-1.5" />
+                <span className="text-xs font-medium truncate max-w-[80px]">
+                  {getInstagramDisplay(player.instagramUsername!)}
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>View Instagram Profile</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-3 bg-muted/30 text-muted-foreground/50 border border-border/20 cursor-not-allowed"
+                disabled
+              >
+                <Instagram className="h-4 w-4 mr-1.5" />
+                <span className="text-xs font-medium">IG</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Instagram not provided</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+    </TooltipProvider>
+  );
+};
 
 const Roster = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -140,6 +245,9 @@ const Roster = () => {
                         "{player.funFact}"
                       </p>
                     </div>
+
+                    {/* Social & Stats Buttons */}
+                    <PlayerSocialButtons player={player} />
                   </GlassCard>
                 </motion.div>
               ))}
