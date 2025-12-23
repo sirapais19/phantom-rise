@@ -20,7 +20,7 @@ const Footer = () => {
   ];
 
   const socialLinks = [
-    { icon: Instagram, href: "#", label: "Instagram" },
+    { icon: Instagram, href: "https://instagram.com/phantom.ultees", label: "Instagram" },
     { icon: Facebook, href: "#", label: "Facebook" },
     { icon: Twitter, href: "#", label: "Twitter" },
     { icon: Youtube, href: "#", label: "YouTube" },
@@ -43,7 +43,7 @@ const Footer = () => {
                 </span>
               </Link>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Ultimate Frisbee team based in [CITY, COUNTRY]. Playing with spirit, competing with passion.
+                Ultimate Frisbee team based in JOHOR, MALAYSIA. Playing with spirit, competing with passion.
               </p>
               {/* Social Links */}
               <div className="flex gap-3 pt-2">
@@ -106,7 +106,7 @@ const Footer = () => {
                   team@phantomultimate.com
                 </a>
                 <p className="text-muted-foreground text-sm">
-                  [CITY, COUNTRY]
+                  JOHOR, MALAYSIA
                 </p>
               </div>
             </div>

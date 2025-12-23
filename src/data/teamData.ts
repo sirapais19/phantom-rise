@@ -1,13 +1,13 @@
 // Team data - easy to edit in one place
 export const teamInfo = {
   name: "PHANTOM",
-  city: "[CITY]",
-  country: "[COUNTRY]",
+  city: "JOHOR",
+  country: "MALAYSIA",
   foundedYear: 2018,
   division: "Open",
   trainingDays: "Tue & Thu",
   email: "team@phantomultimate.com",
-  tagline: "Ultimate Frisbee Team in [CITY]",
+  tagline: "Ultimate Frisbee Team in JOHOR",
 };
 
 export const tournaments = [
@@ -15,7 +15,7 @@ export const tournaments = [
     id: 1,
     name: "Regional Championships 2025",
     date: new Date("2025-03-15T09:00:00"),
-    location: "[CITY] Sports Complex",
+    location: "[JOHOR] Sports Complex",
     division: "Open",
     notes: "Season opener",
     isPast: false,

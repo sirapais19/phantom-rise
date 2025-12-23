@@ -1,8 +1,7 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Search, BarChart3, Instagram } from "lucide-react";
 import PageLayout from "@/components/layout/PageLayout";
-import SectionHeading from "@/components/ui/SectionHeading";
 import GlassCard from "@/components/ui/GlassCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,21 +11,102 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { players, Player } from "@/data/teamData";
 import defaultPlayer from "@/assets/default-player.png";
 
-const PlayerSocialButtons = ({ player }: { player: Player }) => {
-  const hasUltiscore = Boolean(player.ultiscoreId);
-  const hasInstagram = Boolean(player.instagramUsername);
+// ✅ Make sure you have this file set up:
+// src/lib/supabaseClient.ts -> export const supabase = createClient(...)
+import { supabase } from "@/lib/supabaseClient";
 
-  const getInstagramUrl = (username: string) => {
-    const cleanUsername = username.startsWith("@") ? username.slice(1) : username;
-    return `https://instagram.com/${cleanUsername}`;
-  };
+type RoleTag = "CAPTAIN" | "COACH" | "PLAYER";
+type StatusTag = "ACTIVE" | "INACTIVE";
 
-  const getInstagramDisplay = (username: string) => {
-    return username.startsWith("@") ? username : `@${username}`;
-  };
+type PlayerRow = {
+  id: string;
+  full_name: string;
+  jersey_number: number | null;
+  role_tag: RoleTag | null;
+  position: string | null;
+  tagline: string | null;
+  bio: string | null;
+  photo_url: string | null;
+  status: StatusTag | null;
+  instagram_url: string | null; // full URL preferred (from CMS)
+  ultiscore_url: string | null; // full URL preferred (from CMS)
+};
+
+const roleLabel = (role?: RoleTag | null) => {
+  if (role === "CAPTAIN") return "Captain";
+  if (role === "COACH") return "Coach";
+  return "Player";
+};
+
+const isRoleBadge = (role?: RoleTag | null) =>
+  role === "CAPTAIN" || role === "COACH";
+
+const normalizeUrl = (value?: string | null) => {
+  if (!value) return null;
+  const v = value.trim();
+  if (!v) return null;
+  // If user stored username instead of full URL, try to build a valid URL
+  if (v.startsWith("http://") || v.startsWith("https://")) return v;
+  return `https://${v}`;
+};
+
+const igUsernameFromUrlOrText = (value?: string | null) => {
+  if (!value) return null;
+  const v = value.trim();
+  if (!v) return null;
+
+  // If it's already @username
+  if (v.startsWith("@")) return v;
+
+  // If it looks like a username (no spaces, no slashes)
+  if (!v.includes("/") && !v.includes(" ") && !v.includes(".")) return `@${v}`;
+
+  // Parse from URL
+  try {
+    const u = new URL(normalizeUrl(v)!);
+    const parts = u.pathname.split("/").filter(Boolean);
+    return parts[0] ? `@${parts[0]}` : null;
+  } catch {
+    return null;
+  }
+};
+
+const buildInstagramLink = (value?: string | null) => {
+  if (!value) return null;
+  const v = value.trim();
+  if (!v) return null;
+
+  if (v.startsWith("http://") || v.startsWith("https://")) return v;
+
+  // if "@username" or "username"
+  const username = v.startsWith("@") ? v.slice(1) : v;
+  return `https://instagram.com/${username}`;
+};
+
+const buildUltiscoreLink = (value?: string | null) => {
+  if (!value) return null;
+  const v = value.trim();
+  if (!v) return null;
+
+  // if already full URL
+  if (v.startsWith("http://") || v.startsWith("https://")) return v;
+
+  // if user stored only numeric id
+  if (/^\d+$/.test(v)) return `https://ultiscore.com/profile/${v}`;
+
+  // fallback: try https://
+  return normalizeUrl(v);
+};
+
+const PlayerSocialButtons = ({ player }: { player: PlayerRow }) => {
+  const ultiscoreLink = buildUltiscoreLink(player.ultiscore_url);
+  const instagramLink = buildInstagramLink(player.instagram_url);
+  const igLabel = igUsernameFromUrlOrText(player.instagram_url);
+
+  const hasUltiscore = Boolean(ultiscoreLink);
+  const hasInstagram = Boolean(instagramLink) && Boolean(igLabel);
 
   if (!hasUltiscore && !hasInstagram) return null;
 
@@ -41,7 +121,7 @@ const PlayerSocialButtons = ({ player }: { player: Player }) => {
                 variant="ghost"
                 size="sm"
                 className="h-8 px-3 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary border border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)]"
-                onClick={() => window.open(`https://ultiscore.com/profile/${player.ultiscoreId}`, "_blank")}
+                onClick={() => window.open(ultiscoreLink!, "_blank", "noreferrer")}
               >
                 <BarChart3 className="h-4 w-4 mr-1.5" />
                 <span className="text-xs font-medium">Stats</span>
@@ -78,11 +158,11 @@ const PlayerSocialButtons = ({ player }: { player: Player }) => {
                 variant="ghost"
                 size="sm"
                 className="h-8 px-3 bg-accent/10 hover:bg-accent/20 text-accent hover:text-accent border border-accent/20 hover:border-accent/40 transition-all duration-300 hover:shadow-[0_0_12px_hsl(var(--accent)/0.3)]"
-                onClick={() => window.open(getInstagramUrl(player.instagramUsername!), "_blank")}
+                onClick={() => window.open(instagramLink!, "_blank", "noreferrer")}
               >
                 <Instagram className="h-4 w-4 mr-1.5" />
-                <span className="text-xs font-medium truncate max-w-[80px]">
-                  {getInstagramDisplay(player.instagramUsername!)}
+                <span className="text-xs font-medium truncate max-w-[120px]">
+                  {igLabel}
                 </span>
               </Button>
             </TooltipTrigger>
@@ -117,26 +197,77 @@ const Roster = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
 
+  const [players, setPlayers] = useState<PlayerRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const filters = ["All", "Captains", "Coach/Staff", "Players"];
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        setLoadError(null);
+
+        const { data, error } = await supabase
+          .from("players")
+          .select(
+            "id, full_name, jersey_number, role_tag, position, tagline, bio, photo_url, status, instagram_url, ultiscore_url"
+          );
+
+        if (error) throw error;
+
+        // Client-side safety (in case RLS not applied yet)
+        const activeOnly = (data ?? []).filter(
+          (p: PlayerRow) => (p.status ?? "ACTIVE") === "ACTIVE"
+        );
+
+        // Sort: CAPTAIN -> COACH -> PLAYER, then jersey_number
+        const roleOrder: Record<string, number> = { CAPTAIN: 0, COACH: 1, PLAYER: 2 };
+        activeOnly.sort((a, b) => {
+          const ra = roleOrder[a.role_tag ?? "PLAYER"] ?? 2;
+          const rb = roleOrder[b.role_tag ?? "PLAYER"] ?? 2;
+          if (ra !== rb) return ra - rb;
+
+          const na = a.jersey_number ?? 9999;
+          const nb = b.jersey_number ?? 9999;
+          return na - nb;
+        });
+
+        setPlayers(activeOnly);
+      } catch (e: any) {
+        setLoadError(e?.message ?? "Failed to load players");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, []);
+
   const filteredPlayers = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+
     return players.filter((player) => {
+      const numberStr = (player.jersey_number ?? "").toString();
       const matchesSearch =
-        player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        player.number.toString().includes(searchQuery);
+        !q ||
+        player.full_name.toLowerCase().includes(q) ||
+        numberStr.includes(q);
 
       let matchesFilter = true;
       if (activeFilter === "Captains") {
-        matchesFilter = player.role === "Captain";
+        matchesFilter = (player.role_tag ?? "PLAYER") === "CAPTAIN";
       } else if (activeFilter === "Coach/Staff") {
-        matchesFilter = player.role === "Coach" || player.role === "Staff";
+        // DB has COACH only (no STAFF). Keep label as requested.
+        matchesFilter = (player.role_tag ?? "PLAYER") === "COACH";
       } else if (activeFilter === "Players") {
-        matchesFilter = player.role === "Player";
+        matchesFilter = (player.role_tag ?? "PLAYER") === "PLAYER";
       }
 
       return matchesSearch && matchesFilter;
     });
-  }, [searchQuery, activeFilter]);
+  }, [players, searchQuery, activeFilter]);
 
   return (
     <PageLayout>
@@ -174,7 +305,7 @@ const Roster = () => {
                 className="pl-10 bg-secondary/50 border-border/50"
               />
             </div>
-            
+
             {/* Filters */}
             <div className="flex gap-2 flex-wrap">
               {filters.map((filter) => (
@@ -198,59 +329,93 @@ const Roster = () => {
       {/* Player Grid */}
       <section className="page-section">
         <div className="section-container">
-          {filteredPlayers.length === 0 ? (
+          {loading ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No players found matching your criteria</p>
+              <p className="text-muted-foreground">Loading players...</p>
+            </div>
+          ) : loadError ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">{loadError}</p>
+            </div>
+          ) : filteredPlayers.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                No players found matching your criteria
+              </p>
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredPlayers.map((player, index) => (
-                <motion.div
-                  key={player.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                >
-                  <GlassCard className="group overflow-hidden" hover>
-                    {/* Player Image */}
-                    <div className="relative aspect-square mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-accent/10">
-                      <img
-                        src={player.image || defaultPlayer}
-                        alt={player.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = defaultPlayer;
-                        }}
-                      />
-                      {/* Number Badge */}
-                      <div className="absolute top-3 right-3 px-3 py-1 rounded-lg bg-primary/90 text-primary-foreground font-bold text-lg">
-                        #{player.number}
+              {filteredPlayers.map((player, index) => {
+                const displayNumber =
+                  player.jersey_number !== null && player.jersey_number !== undefined
+                    ? `#${player.jersey_number}`
+                    : null;
+
+                const role = (player.role_tag ?? "PLAYER") as RoleTag;
+
+                const quote = (player.tagline ?? "").trim();
+                const showQuote = quote.length > 0;
+
+                return (
+                  <motion.div
+                    key={player.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: index * 0.05 }}
+                  >
+                    <GlassCard className="group overflow-hidden" hover>
+                      {/* Player Image */}
+                      <div className="relative aspect-square mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-accent/10">
+                        <img
+                          src={player.photo_url || defaultPlayer}
+                          alt={player.full_name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = defaultPlayer;
+                          }}
+                        />
+
+                        {/* Number Badge */}
+                        {displayNumber && (
+                          <div className="absolute top-3 right-3 px-3 py-1 rounded-lg bg-primary/90 text-primary-foreground font-bold text-lg">
+                            {displayNumber}
+                          </div>
+                        )}
+
+                        {/* Role Badge */}
+                        {isRoleBadge(role) && (
+                          <div className="absolute top-3 left-3 px-3 py-1 rounded-lg bg-accent/90 text-accent-foreground text-xs font-semibold uppercase">
+                            {roleLabel(role)}
+                          </div>
+                        )}
                       </div>
-                      {/* Role Badge */}
-                      {(player.role === "Captain" || player.role === "Coach" || player.role === "Staff") && (
-                        <div className="absolute top-3 left-3 px-3 py-1 rounded-lg bg-accent/90 text-accent-foreground text-xs font-semibold uppercase">
-                          {player.role}
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Player Info */}
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {player.name}
-                      </h3>
-                      <p className="text-sm text-primary">{player.position}</p>
-                      <p className="text-sm text-muted-foreground italic">
-                        "{player.funFact}"
-                      </p>
-                    </div>
+                      {/* Player Info */}
+                      <div className="space-y-2">
+                        <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
+                          {player.full_name}
+                        </h3>
 
-                    {/* Social & Stats Buttons */}
-                    <PlayerSocialButtons player={player} />
-                  </GlassCard>
-                </motion.div>
-              ))}
+                        {player.position ? (
+                          <p className="text-sm text-primary">{player.position}</p>
+                        ) : (
+                          <p className="text-sm text-primary/70"> </p>
+                        )}
+
+                        {showQuote && (
+                          <p className="text-sm text-muted-foreground italic">
+                            “{quote}”
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Social & Stats Buttons */}
+                      <PlayerSocialButtons player={player} />
+                    </GlassCard>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </div>

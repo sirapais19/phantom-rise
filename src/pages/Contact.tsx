@@ -25,7 +25,7 @@ const Contact = () => {
   };
 
   const socials = [
-    { icon: Instagram, label: "Instagram", href: "#" },
+    { icon: Instagram, label: "Instagram", href: "https://instagram.com/phantom.ultees" },
     { icon: Facebook, label: "Facebook", href: "#" },
     { icon: Twitter, label: "Twitter", href: "#" },
     { icon: Youtube, label: "YouTube", href: "#" },
@@ -60,7 +60,7 @@ const Contact = () => {
 
           <div className="space-y-8">
             <GlassCard><div className="flex items-start gap-4"><Mail className="h-6 w-6 text-primary" /><div><p className="text-sm text-muted-foreground">Email</p><a href="mailto:team@phantomultimate.com" className="text-foreground hover:text-primary">team@phantomultimate.com</a></div></div></GlassCard>
-            <GlassCard><div className="flex items-start gap-4"><MapPin className="h-6 w-6 text-primary" /><div><p className="text-sm text-muted-foreground">Location</p><p className="text-foreground">[CITY, COUNTRY]</p></div></div></GlassCard>
+            <GlassCard><div className="flex items-start gap-4"><MapPin className="h-6 w-6 text-primary" /><div><p className="text-sm text-muted-foreground">Location</p><p className="text-foreground">[JOHOR, MALAYSIA]</p></div></div></GlassCard>
             <GlassCard><h3 className="font-semibold mb-4">Follow Us</h3><div className="flex gap-3">{socials.map((s) => (<a key={s.label} href={s.href} className="p-3 rounded-lg bg-secondary/50 hover:bg-primary/20 hover:text-primary transition-all"><s.icon className="h-5 w-5" /></a>))}</div></GlassCard>
             <GlassCard className="aspect-video flex items-center justify-center"><MapPin className="h-12 w-12 text-primary" /><p className="text-muted-foreground ml-4">Map Placeholder</p></GlassCard>
           </div>
